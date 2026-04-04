@@ -40,6 +40,7 @@ import { printStartupBanner } from "./startup-banner.js";
 import { getBoardClaimWarningUrl, initializeBoardClaimChallenge } from "./board-claim.js";
 import { maybePersistWorktreeRuntimePorts } from "./worktree-config.js";
 import { initTelemetry, getTelemetryClient } from "./telemetry.js";
+import { ensureAgentJwtSecret } from "./agent-auth-secret.js";
 
 type BetterAuthSessionUser = {
   id: string;
@@ -79,6 +80,14 @@ export interface StartedServer {
 }
 
 export async function startServer(): Promise<StartedServer> {
+  const agentJwtSecret = ensureAgentJwtSecret();
+  if (agentJwtSecret.created) {
+    logger.info(
+      { envFilePath: agentJwtSecret.filePath },
+      "Created PAPERCLIP_AGENT_JWT_SECRET for local agent auth",
+    );
+  }
+
   let config = loadConfig();
   initTelemetry({ enabled: config.telemetryEnabled });
   if (process.env.PAPERCLIP_SECRETS_PROVIDER === undefined) {
